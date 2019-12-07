@@ -1,6 +1,7 @@
 package com.gumirov.shamil.whatsthat
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.hardware.display.DisplayManager
 import android.os.Bundle
 import android.util.DisplayMetrics
@@ -13,9 +14,6 @@ import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraX
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageAnalysisConfig
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCapture.CaptureMode
-import androidx.camera.core.ImageCaptureConfig
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.core.PreviewConfig
@@ -36,9 +34,8 @@ import kotlin.math.min
 typealias LumaListener = (luma: Double) -> Unit
 
 /**
- * Main fragment for this app. Implements all camera operations including:
+ * Camera fragment. Implements all camera operations including:
  * - Viewfinder
- * - Photo taking
  * - Image analysis
  */
 class CameraFragment
@@ -51,18 +48,16 @@ class CameraFragment
   private var displayId = -1
   private var lensFacing = CameraX.LensFacing.BACK
   private var preview: Preview? = null
-  private var imageCapture: ImageCapture? = null
   private var imageAnalyzer: ImageAnalysis? = null
 
   /** Internal reference of the [DisplayManager] */
-  //private lateinit var displayManager: DisplayManager
+  private lateinit var displayManager: DisplayManager
 
   /**
    * We need a display listener for orientation changes that do not trigger a configuration
    * change, for example if we choose to override config change in manifest or for 180-degree
    * orientation changes.
    */
-  /*
   private val displayListener = object : DisplayManager.DisplayListener {
     override fun onDisplayAdded(displayId: Int) = Unit
     override fun onDisplayRemoved(displayId: Int) = Unit
@@ -70,12 +65,10 @@ class CameraFragment
       if (displayId == this@CameraFragment.displayId) {
         Log.d(TAG, "Rotation changed: ${view.display.rotation}")
         preview?.setTargetRotation(view.display.rotation)
-        imageCapture?.setTargetRotation(view.display.rotation)
         imageAnalyzer?.setTargetRotation(view.display.rotation)
       }
     } ?: Unit
   }
-  */
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -98,7 +91,7 @@ class CameraFragment
     super.onDestroyView()
 
     // Unregister the broadcast receivers and listeners
-    //displayManager.unregisterDisplayListener(displayListener)
+    displayManager.unregisterDisplayListener(displayListener)
   }
 
   override fun onCreateView(
@@ -114,9 +107,9 @@ class CameraFragment
     viewFinder = container.findViewById(R.id.view_finder)
 
     // Every time the orientation of device changes, recompute layout
-    //displayManager = viewFinder.context
-    //    .getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
-    //displayManager.registerDisplayListener(displayListener, null)
+    displayManager = viewFinder.context
+        .getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+    displayManager.registerDisplayListener(displayListener, null)
 
     // Wait for the views to be properly laid out
     viewFinder.post {
@@ -173,7 +166,7 @@ class CameraFragment
     }
 
     // Apply declared configs to CameraX using the same lifecycle owner
-    CameraX.bindToLifecycle(viewLifecycleOwner, preview, imageCapture, imageAnalyzer)
+    CameraX.bindToLifecycle(viewLifecycleOwner, preview, imageAnalyzer)
   }
 
   /**
