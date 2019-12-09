@@ -2,14 +2,17 @@ package com.gumirov.shamil.whatsthat
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.ImageFormat
+import android.graphics.Rect
+import android.graphics.YuvImage
 import android.hardware.display.DisplayManager
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
-import android.view.LayoutInflater
 import android.view.TextureView
 import android.view.View
-import android.view.ViewGroup
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.CameraX
 import androidx.camera.core.ImageAnalysis
@@ -19,19 +22,15 @@ import androidx.camera.core.Preview
 import androidx.camera.core.PreviewConfig
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import com.android.example.cameraxbasic.utils.AutoFitPreviewBuilder
-import java.nio.ByteBuffer
-import java.util.ArrayDeque
+import com.gumirov.shamil.whatsthat.dagger.BaseFragment
+import com.gumirov.shamil.whatsthat.databinding.FragmentCameraBinding
+import java.io.ByteArrayOutputStream
 import java.util.concurrent.Executor
-import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
-
-/** Helper type alias used for analysis use case callbacks */
-typealias LumaListener = (luma: Double) -> Unit
 
 /**
  * Camera fragment. Implements all camera operations including:
@@ -39,7 +38,7 @@ typealias LumaListener = (luma: Double) -> Unit
  * - Image analysis
  */
 class CameraFragment
-  : Fragment()
+  : BaseFragment<AnalysisResultViewModel, FragmentCameraBinding>(R.layout.fragment_camera, BR.viewmodel)
 {
   private lateinit var container: ConstraintLayout
   private lateinit var viewFinder: TextureView
@@ -70,6 +69,11 @@ class CameraFragment
     } ?: Unit
   }
 
+  override fun onActivityCreated(savedInstanceState: Bundle?) {
+    WhatsThatApplication.component.inject(this)
+    super.onActivityCreated(savedInstanceState)
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     // Mark this as a retain fragment, so the lifecycle does not get restarted on config change
@@ -94,12 +98,6 @@ class CameraFragment
     displayManager.unregisterDisplayListener(displayListener)
   }
 
-  override fun onCreateView(
-      inflater: LayoutInflater,
-      container: ViewGroup?,
-      savedInstanceState: Bundle?): View? =
-      inflater.inflate(R.layout.fragment_camera, container, false)
-
   @SuppressLint("MissingPermission")
   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
@@ -123,7 +121,6 @@ class CameraFragment
 
   /** Declare and bind preview, capture and analysis use cases */
   private fun bindCameraUseCases() {
-
     // Get screen metrics used to setup camera for full screen resolution
     val metrics = DisplayMetrics().also { viewFinder.display.getRealMetrics(it) }
     Log.d(TAG, "Screen metrics: ${metrics.widthPixels} x ${metrics.heightPixels}")
@@ -142,7 +139,6 @@ class CameraFragment
     // Use the auto-fit preview builder to automatically handle size and orientation changes
     preview = AutoFitPreviewBuilder.build(viewFinderConfig, viewFinder)
 
-    // Setup image analysis pipeline that computes average pixel luminance in real time
     val analyzerConfig = ImageAnalysisConfig.Builder().apply {
       setLensFacing(lensFacing)
       // In our analysis, we care more about the latest image than analyzing *every* image
@@ -153,16 +149,10 @@ class CameraFragment
     }.build()
 
     imageAnalyzer = ImageAnalysis(analyzerConfig).apply {
-      setAnalyzer(mainExecutor,
-          //MLAnalyzer())
-          LuminosityAnalyzer { luma ->
-            // Values returned from our analyzer are passed to the attached listener
-            // We log image analysis results here --
-            // you should do something useful instead!
-            val fps = (analyzer as LuminosityAnalyzer).framesPerSecond
-            Log.d(TAG, "Average luminosity: $luma. " +
-                "Frames per second: ${"%.01f".format(fps)}")
-          })
+      setAnalyzer(mainExecutor, ImageAnalysis.Analyzer { image: ImageProxy, rotationDegrees: Int ->
+        val bitmap = image.toBitmap()
+        viewModel.image.postValue(bitmap)
+      })
     }
 
     // Apply declared configs to CameraX using the same lifecycle owner
@@ -189,92 +179,31 @@ class CameraFragment
     return AspectRatio.RATIO_16_9
   }
 
-  /**
-   * Our custom image analysis class.
-   *
-   * <p>All we need to do is override the function `analyze` with our desired operations. Here,
-   * we compute the average luminosity of the image by looking at the Y plane of the YUV frame.
-   */
-  private class LuminosityAnalyzer(listener: LumaListener? = null) : ImageAnalysis.Analyzer {
-
-    private val frameRateWindow = 8
-    private val frameTimestamps = ArrayDeque<Long>(5)
-    private val listeners = ArrayList<LumaListener>().apply { listener?.let { add(it) } }
-    private var lastAnalyzedTimestamp = 0L
-    var framesPerSecond: Double = -1.0
-      private set
-
-    /**
-     * Used to add listeners that will be called with each luma computed
-     */
-    fun onFrameAnalyzed(listener: LumaListener) = listeners.add(listener)
-
-    /**
-     * Helper extension function used to extract a byte array from an image plane buffer
-     */
-    private fun ByteBuffer.toByteArray(): ByteArray {
-      rewind()    // Rewind the buffer to zero
-      val data = ByteArray(remaining())
-      get(data)   // Copy the buffer into a byte array
-      return data // Return the byte array
-    }
-
-    /**
-     * Analyzes an image to produce a result.
-     *
-     * <p>The caller is responsible for ensuring this analysis method can be executed quickly
-     * enough to prevent stalls in the image acquisition pipeline. Otherwise, newly available
-     * images will not be acquired and analyzed.
-     *
-     * <p>The image passed to this method becomes invalid after this method returns. The caller
-     * should not store external references to this image, as these references will become
-     * invalid.
-     *
-     * @param image image being analyzed VERY IMPORTANT: do not close the image, it will be
-     * automatically closed after this method returns
-     * @return the image analysis result
-     */
-    override fun analyze(image: ImageProxy, rotationDegrees: Int) {
-      // If there are no listeners attached, we don't need to perform analysis
-      if (listeners.isEmpty()) return
-
-      // Keep track of frames analyzed
-      val currentTime = System.currentTimeMillis()
-      frameTimestamps.push(currentTime)
-
-      // Compute the FPS using a moving average
-      while (frameTimestamps.size >= frameRateWindow) frameTimestamps.removeLast()
-      val timestampFirst = frameTimestamps.peekFirst() ?: currentTime
-      val timestampLast = frameTimestamps.peekLast() ?: currentTime
-      framesPerSecond = 1.0 / ((timestampFirst - timestampLast) /
-          frameTimestamps.size.coerceAtLeast(1).toDouble()) * 1000.0
-
-      // Calculate the average luma no more often than every second
-      if (frameTimestamps.first - lastAnalyzedTimestamp >= TimeUnit.SECONDS.toMillis(1)) {
-        lastAnalyzedTimestamp = frameTimestamps.first
-
-        // Since format in ImageAnalysis is YUV, image.planes[0] contains the luminance
-        //  plane
-        val buffer = image.planes[0].buffer
-
-        // Extract image data from callback object
-        val data = buffer.toByteArray()
-
-        // Convert the data into an array of pixel values ranging 0-255
-        val pixels = data.map { it.toInt() and 0xFF }
-
-        // Compute average luminance for the image
-        val luma = pixels.average()
-
-        // Call all listeners with new value
-        listeners.forEach { it(luma) }
-      }
-    }
-  }
-
   companion object {
     private const val TAG = "CameraXBasic"
     private const val RATIO_4_3_VALUE = 4.0 / 3.0
     private const val RATIO_16_9_VALUE = 16.0 / 9.0
+
+    fun ImageProxy.toBitmap(): Bitmap {
+      val yBuffer = planes[0].buffer // Y
+      val uBuffer = planes[1].buffer // U
+      val vBuffer = planes[2].buffer // V
+
+      val ySize = yBuffer.remaining()
+      val uSize = uBuffer.remaining()
+      val vSize = vBuffer.remaining()
+
+      val nv21 = ByteArray(ySize + uSize + vSize)
+
+      yBuffer.get(nv21, 0, ySize)
+      vBuffer.get(nv21, ySize, vSize)
+      uBuffer.get(nv21, ySize + vSize, uSize)
+
+      val yuvImage = YuvImage(nv21, ImageFormat.NV21, this.width, this.height, null)
+      val out = ByteArrayOutputStream()
+      yuvImage.compressToJpeg(Rect(0, 0, yuvImage.width, yuvImage.height), 100, out)
+      val imageBytes = out.toByteArray()
+      return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+    }
   }
 }

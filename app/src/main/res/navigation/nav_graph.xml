@@ -4,28 +4,28 @@
     android:id="@+id/nav"
     app:startDestination="@id/permission_request_fragment"
     >
-    <fragment
-        android:id="@+id/permission_request_fragment"
-        android:name="com.gumirov.shamil.whatsthat.PermissionRequestFragment"
-        android:label="PermissionRequestFragment"
-        >
-        <action
-            android:id="@+id/action_permissions_to_camera"
-            app:destination="@id/camera_fragment"
-            app:popUpTo="@id/permission_request_fragment"
-            app:popUpToInclusive="true"
-            />
-    </fragment>
-    <fragment
-        android:id="@+id/camera_fragment"
-        android:name="com.gumirov.shamil.whatsthat.CameraFragment"
-        android:label="CameraFragment"
-        >
-        <action
-            android:id="@+id/action_camera_to_permissions"
-            app:destination="@id/permission_request_fragment"
-            app:popUpTo="@id/camera_fragment"
-            app:popUpToInclusive="true"
-            />
-    </fragment>
+  <fragment
+      android:id="@+id/permission_request_fragment"
+      android:name="com.gumirov.shamil.whatsthat.PermissionRequestFragment"
+      android:label="PermissionRequestFragment"
+      >
+    <action
+        android:id="@+id/action_permissions_to_camera"
+        app:destination="@id/camera_fragment"
+        app:popUpTo="@id/permission_request_fragment"
+        app:popUpToInclusive="true"
+        />
+  </fragment>
+  <fragment
+      android:id="@+id/camera_fragment"
+      android:name="com.gumirov.shamil.whatsthat.CameraFragment"
+      android:label="CameraFragment"
+      >
+    <action
+        android:id="@+id/action_camera_to_permissions"
+        app:destination="@id/permission_request_fragment"
+        app:popUpTo="@id/camera_fragment"
+        app:popUpToInclusive="true"
+        />
+  </fragment>
 </navigation>

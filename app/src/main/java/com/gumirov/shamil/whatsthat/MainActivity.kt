@@ -11,6 +11,7 @@ class MainActivity
   private lateinit var container: FrameLayout
 
   override fun onCreate(savedInstanceState: Bundle?) {
+    WhatsThatApplication.component.inject(this)
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_main)
     container = findViewById(R.id.fragment_container)
