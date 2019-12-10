@@ -44,6 +44,9 @@ android {
             option("-Xmaxerrs", 500)
         }
     }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
 }
 
 dependencies {
@@ -83,6 +86,22 @@ dependencies {
 
     //testing
     testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test:core:1.2.0'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    androidTestImplementation 'androidx.test:runner:1.2.0'
+    androidTestImplementation 'androidx.test:rules:1.2.0'
+
+    debugImplementation ("androidx.fragment:fragment-testing:1.2.0-rc03", {
+        exclude group: 'androidx.test', module: 'core'
+    })
+
+    testImplementation 'org.robolectric:robolectric:4.2'
+
+    testImplementation 'org.mockito:mockito-inline:2.8.47'
+    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0"
+    testImplementation "androidx.arch.core:core-testing:2.0.0"
+
+    //todo: investigate can this be useful instead of mockitokotlin:
+    //testImplementation 'org.mockito:mockito-android:2.22.0'
 }

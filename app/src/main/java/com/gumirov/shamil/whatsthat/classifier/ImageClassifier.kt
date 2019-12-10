@@ -79,7 +79,7 @@ abstract class ImageClassifier(assetManager: AssetManager)
   }
 
   /** Runs inference and returns the classification results.  */
-  fun recognizeImage(bitmap: Bitmap): List<Result> {
+  open fun recognizeImage(bitmap: Bitmap): List<Result> {
     inputImageBuffer = loadImage(bitmap, 0)
     // Runs the inference call.
     tflite.run(inputImageBuffer.getBuffer(), outputProbabilityBuffer.buffer.rewind())
