@@ -28,7 +28,7 @@ class ImageClassifierTest
     val scenario = launchFragmentInContainer<CameraFragment>()
 
     scenario.onFragment { fragment ->
-      fragment.viewModel.image.postValue(banana)
+      fragment.viewModel.image.value = banana
     }
     onView(withId(R.id.result)).check(matches(withSubstring("banana")))
   }
