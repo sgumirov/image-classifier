@@ -2,6 +2,7 @@
 <layout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     >
   <data>
     <variable
@@ -21,13 +22,15 @@
         android:layout_height="wrap_content"
         android:background="@color/semitransparent"
         android:elevation="2dp"
-        android:text="@{viewmodel.result}"
-        android:textSize="24sp"
-        android:textColor="@android:color/white"
+        android:gravity="center_horizontal"
         android:maxLines="1"
+        android:text="@{viewmodel.result}"
+        android:textColor="@android:color/white"
+        android:textSize="24sp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        tools:text="test"
         />
     <TextureView
         android:id="@+id/view_finder"
