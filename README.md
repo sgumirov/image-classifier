@@ -10,6 +10,17 @@ series) based on pre-trained ML-model.
 A log track for this project is at
 [my blog http://shamil.gumirov.com](http://shamil.gumirov.com).
 
+# Summary of what's done
+
+What did I do:
+* Android app in kotlin with MVVM and JetPack, TensorFlow image classifier for CameraX preview.
+* Two tests: unit (Robolectric JVM-based) and instrumented (needs Android emulator to run).
+* Repository: Gitlab with safe workflow: development is done in feature branch, merge requests to master with Build/Test CI pipeline checks before able to merge to the master branch.
+* CI: Gitlab integrated with Jenkins. Build is executed for any push to feature branch.
+* Project tracking: Jira with Kanban. All commit messages are automapped to Jira tickets using "smart commit messages". Merge of MR leads to automatic Jira ticket state change (move to Done)
+* CD: publishing is done to Artifactory (artefacts repository)
+* Set up separate Jenkins slave to run project tests which require Android emulator for instrumented testing.
+
 # Repo workflow, CI and Jira
 
 `master` branch is protected.
