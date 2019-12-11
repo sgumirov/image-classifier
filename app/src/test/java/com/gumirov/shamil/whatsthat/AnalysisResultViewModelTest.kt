@@ -47,6 +47,6 @@ class AnalysisResultViewModelTest
     viewModel.result.observeForever(observer)
     //execute and assert
     viewModel.image.postValue(bitmap)
-    Assert.assertEquals(result[0].toString(), viewModel.result.value?.toString())
+    Assert.assertEquals(String.format("%s (%.1f%%)", result[0].title, result[0].confidence * 100f), viewModel.result.value?.toString())
   }
 }

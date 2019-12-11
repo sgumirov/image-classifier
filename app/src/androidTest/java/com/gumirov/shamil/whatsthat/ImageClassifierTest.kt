@@ -30,6 +30,6 @@ class ImageClassifierTest
     scenario.onFragment { fragment ->
       fragment.viewModel.image.value = banana
     }
-    onView(withId(R.id.result)).check(matches(withSubstring("banana")))
+    onView(withId(R.id.result)).check(matches(withSubstring("banana ")))
   }
 }
