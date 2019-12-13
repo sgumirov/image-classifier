@@ -63,3 +63,12 @@ commit msg).
 ## Google Play
 
 Google play publish process is ongoing (Internal testing phase).
+
+# License
+
+[GNU GPL 3.0](https://www.gnu.org/licenses/gpl-3.0.html).
+
+# Fonts used
+
+[TH Sarabun New](https://fontlibrary.org/en/font/thsarabun-new) licensed under 
+GNU GPL 3.0.
