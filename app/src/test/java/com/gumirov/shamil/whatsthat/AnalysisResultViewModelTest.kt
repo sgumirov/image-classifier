@@ -1,3 +1,7 @@
+/*
+ * (c) 2019 by Shamil Gumirov
+ * Licensed under GNU GPL 3.0
+ */
 package com.gumirov.shamil.whatsthat
 
 import android.graphics.Bitmap
@@ -17,13 +21,14 @@ import org.mockito.MockitoAnnotations
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
-@Config(manifest=Config.NONE)
+@Config(manifest = Config.NONE)
 @RunWith(RobolectricTestRunner::class)
-class AnalysisResultViewModelTest
-{
-  @get:Rule val instantTaskExecutorRule = InstantTaskExecutorRule()
+class AnalysisResultViewModelTest {
+  @get:Rule
+  val instantTaskExecutorRule = InstantTaskExecutorRule()
 
-  @Mock private lateinit var classifier: ImageClassifier
+  @Mock
+  private lateinit var classifier: ImageClassifier
 
   private lateinit var viewModel: AnalysisResultViewModel
   private lateinit var bitmap: Bitmap
@@ -47,6 +52,9 @@ class AnalysisResultViewModelTest
     viewModel.result.observeForever(observer)
     //execute and assert
     viewModel.image.postValue(bitmap)
-    Assert.assertEquals(String.format("%s (%.1f%%)", result[0].title, result[0].confidence * 100f), viewModel.result.value?.toString())
+    Assert.assertEquals(
+      String.format("%s (%.1f%%)", result[0].title, result[0].confidence * 100f),
+      viewModel.result.value?.toString()
+    )
   }
 }

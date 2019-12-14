@@ -1,3 +1,7 @@
+/*
+ * (c) 2019 by Shamil Gumirov
+ * Licensed under GNU GPL 3.0
+ */
 package com.gumirov.shamil.whatsthat
 
 import android.annotation.SuppressLint
@@ -149,7 +153,7 @@ class CameraFragment
     }.build()
 
     imageAnalyzer = ImageAnalysis(analyzerConfig).apply {
-      setAnalyzer(mainExecutor, ImageAnalysis.Analyzer { image: ImageProxy, rotationDegrees: Int ->
+      setAnalyzer(mainExecutor, ImageAnalysis.Analyzer { image: ImageProxy, _: Int ->
         val bitmap = image.toBitmap()
         viewModel.image.postValue(bitmap)
       })

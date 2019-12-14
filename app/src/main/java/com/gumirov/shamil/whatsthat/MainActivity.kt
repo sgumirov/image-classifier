@@ -1,3 +1,7 @@
+/*
+ * (c) 2019 by Shamil Gumirov
+ * Licensed under GNU GPL 3.0
+ */
 package com.gumirov.shamil.whatsthat
 
 import android.os.Bundle
