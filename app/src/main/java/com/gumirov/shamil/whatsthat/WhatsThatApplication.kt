@@ -1,3 +1,7 @@
+/*
+ * (c) 2019 by Shamil Gumirov
+ * Licensed under GNU GPL 3.0
+ */
 package com.gumirov.shamil.whatsthat
 
 import android.app.Application
@@ -10,9 +14,8 @@ class WhatsThatApplication
 {
   override fun onCreate() {
     super.onCreate()
-    component = DaggerSingletonComponent.builder().
-        assetManagerModule(AssetManagerModule(assets)).
-        build()
+    component =
+      DaggerSingletonComponent.builder().assetManagerModule(AssetManagerModule(assets)).build()
   }
 
   companion object {
